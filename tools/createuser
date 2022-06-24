@@ -1,0 +1,22 @@
+#!/bin/bash
+# createuser
+
+if [ $# -lt 2 ]; then
+	echo "usage: ./createuser <username> <password>"
+	exit 1
+fi
+
+userhash=`echo -n "$1" | openssl dgst -sha256 | tail -c 65`
+passhash=`echo -n "$2" | openssl dgst -sha256 | tail -c 65`
+
+echo "username hash ($1): $userhash"
+echo "password hash ($2): $passhash"
+
+read -p "add user to database (y/n): " -N 1 REPLY
+
+echo    # (optional) move to a new line
+
+if [ $REPLY = 'y' ]; then
+    echo "adding user entry in ../database.db"
+    sqlite3 ../database.db "create table if not exists users(id integer primary key, username text, password text); insert into users values(null, '$userhash', '$passhash');"
+fi

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport" />
+
+  <title>sb - admin panel</title>
+  <meta content="sb - admin panel" property="og:title" />
+
+  <meta content="sb - admin panel" name="description" />
+  <meta content="sb - admin panel" property="og:description" />
+</head>
+<style>
+  * {
+    margin: 0;
+    --tc: #181818;
+    --bc: #fefefe;
+    --hc: #207030;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    * {
+      --tc: #fefefe;
+      --bc: #18181;
+      --hc: #ffdd33;
+    }
+  }
+
+  body {
+    font: 18px -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.4;
+    color: var(--tc);
+    background: var(--bc);
+    max-width: 36em;
+    margin: 0 auto;
+    padding: 0 0.7em;
+    text-align: justify;
+  }
+
+  main {
+    margin-bottom: 3em;
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--hc);
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  h1,
+  h2,
+  br,
+  header,
+  ul {
+    margin-bottom: 1em;
+  }
+
+  ul {
+    padding-left: 1em;
+  }
+
+  br {
+    content: " ";
+    display: block;
+  }
+
+  /* navigation */
+  section,
+  section:target~section:last-of-type {
+    display: none;
+  }
+
+  section:target,
+  section:last-of-type {
+    display: inherit;
+  }
+
+  /* end navigation */
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header>a {
+    font-size: 1.7em;
+    font-weight: 700;
+  }
+
+  nav a {
+    margin-left: 0.75em;
+  }
+
+  div {
+    padding: 10px;
+    border-color: #868686;
+    border-style: solid;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+
+  img {
+    height: 500px;
+    width: 500px;
+  }
+
+  hr {
+      margin-top: 0.5em;
+      margin-bottom: 1em;
+  }
+</style>
+
+<body>
+  <header>
+    <a href="/admin">ADMIN PANEL</a>
+    <nav>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main>
+    <section id="h">
+      <div>
+        <h1>New Blogpost</h1>
+        <br>
+
+        <input id="blogpostTitle" type="text"/>
+        <br>
+
+        <textarea id="blogpostContent" style="width: 50%;"></textarea>
+        <br>
+
+        <button type="button" onclick="createBlogpost();">create</button>
+      </div>
+
+      <hr>
+
+      {{ range .Blogposts }}
+      <div>
+        <input id="blogpostTitle{{.ID}}" type="text" value="{{.Title}}"/>
+        <hr>
+        <textarea id="blogpostContent{{.ID}}" style="width: 50%;">{{.Content}}</textarea>
+        <br>
+        <button type="button" onclick="deleteBlogpost({{.ID}});">delete</button>
+        <button type="button" onclick="updateBlogpost({{.ID}});">update</button>
+      </div>
+      {{ end }}
+    </section>
+  </main>
+
+  <script type="text/javascript">
+    const deleteBlogpost = (id) => {
+        fetch('/blogposts/delete/' + id, {
+            method: 'POST'
+        }).then(location.reload())
+    }
+    const updateBlogpost = (id) => {
+        blogpostTitle = document.getElementById("blogpostTitle" + id)
+        blogpostContent = document.getElementById("blogpostContent" + id)
+
+        let data = {
+            title: blogpostTitle.value,
+            content: blogpostContent.value,
+        }
+        
+        fetch('/blogposts/update/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(location.reload())
+    }
+    const createBlogpost = () => {
+        blogpostTitle = document.getElementById("blogpostTitle")
+        blogpostContent = document.getElementById("blogpostContent")
+
+        let data = {
+            title: blogpostTitle.value,
+            content: blogpostContent.value,
+        }
+        
+        fetch('/blogposts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(location.reload())
+    }
+  </script>
+</body>
+
+</html>
