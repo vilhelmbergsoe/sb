@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	bf "github.com/russross/blackfriday/v2"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 func (s *server) routes() {
@@ -69,6 +72,12 @@ func (s *server) Auth(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func (s *server) HandleHome() http.HandlerFunc {
+	type Blogpost struct {
+		ID      int
+		Title   string
+		Content template.HTML
+	}
+
 	type Data struct {
 		Blogposts []Blogpost
 	}
@@ -90,6 +99,13 @@ func (s *server) HandleHome() http.HandlerFunc {
 		var data Data
 
 		json.Unmarshal(body, &data.Blogposts)
+
+		for i := range data.Blogposts {
+			markdown := []byte(data.Blogposts[i].Content)
+			unsafe := string(bf.Run(markdown, bf.WithExtensions(bf.CommonExtensions)))
+			html := bluemonday.UGCPolicy().Sanitize(unsafe)
+			data.Blogposts[i].Content = template.HTML(html)
+		}
 
 		s.hometmpl.Execute(w, data)
 	}
@@ -127,7 +143,7 @@ func (s *server) HandleBlogposts() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var blogposts []Blogpost
 
-		row, err := s.db.Query("SELECT * FROM blogposts ORDER BY id")
+		row, err := s.db.Query("SELECT * FROM blogposts ORDER BY id DESC")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

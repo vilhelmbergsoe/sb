@@ -108,6 +108,10 @@
     width: 500px;
   }
 
+  #b img {
+    width: 100%;
+  }
+
   hr {
       margin-top: 0.5em;
       margin-bottom: 1em;
@@ -127,7 +131,7 @@
       <h1>Blog</h1>
       {{ range .Blogposts }}
       <div>
-        <h3>{{ .Title }}</h3>
+        <h2>{{ .Title }}</h2>
         <hr>
         <p>{{ .Content }}</p>
       </div>

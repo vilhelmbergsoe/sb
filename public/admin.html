@@ -90,6 +90,11 @@
     font-size: 1.7em;
     font-weight: 700;
   }
+  
+  input, textarea, button {
+    font-size: 1em;
+    font-weight: 700;
+  }
 
   nav a {
     margin-left: 0.75em;
@@ -127,10 +132,10 @@
         <h1>New Blogpost</h1>
         <br>
 
-        <input id="blogpostTitle" type="text"/>
+        <input id="blogpostTitle" style="max-width: 100%; width: 99%;" type="text" placeholder="Title"/>
         <br>
 
-        <textarea id="blogpostContent" style="width: 50%;"></textarea>
+        <textarea id="blogpostContent" style="max-width:100%; width: 99%; height: 15em;" placeholder="Content"></textarea>
         <br>
 
         <button type="button" onclick="createBlogpost();">create</button>
@@ -140,9 +145,9 @@
 
       {{ range .Blogposts }}
       <div>
-        <input id="blogpostTitle{{.ID}}" type="text" value="{{.Title}}"/>
+        <input id="blogpostTitle{{.ID}}" style="max-width: 100%; width: 99%;" type="text" value="{{.Title}}"/>
         <hr>
-        <textarea id="blogpostContent{{.ID}}" style="width: 50%;">{{.Content}}</textarea>
+        <textarea id="blogpostContent{{.ID}}" style="max-width:100%; width: 99%; height: 20em;">{{.Content}}</textarea>
         <br>
         <button type="button" onclick="deleteBlogpost({{.ID}});">delete</button>
         <button type="button" onclick="updateBlogpost({{.ID}});">update</button>
