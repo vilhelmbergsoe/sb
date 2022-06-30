@@ -4,11 +4,11 @@
 <head>
   <meta content="width=device-width,initial-scale=1" name="viewport" />
 
-  <title>sb</title>
-  <meta content="sb" property="og:title" />
+  <title>Vilhelm Bergsøe</title>
+  <meta content="Vilhelm Bergsøe" property="og:title" />
 
-  <meta content="sb" name="description" />
-  <meta content="sb" property="og:description" />
+  <meta content="Vilhelm Bergsøe" name="description" />
+  <meta content="Vilhelm Bergsøe" property="og:description" />
 </head>
 <style>
   * {
@@ -104,7 +104,6 @@
   }
 
   img {
-    height: 500px;
     width: 500px;
   }
 
@@ -136,7 +135,7 @@
 
 <body>
   <header>
-    <a href="#h">MYSITE</a>
+    <a href="#h">Vilhelm Bergsøe</a>
     <nav>
       <a href="#b">Blog</a>
       <a href="#g">Contact</a>
@@ -144,7 +143,7 @@
   </header>
   <main>
     <section id="b">
-      <h1>Blog</h1>
+      <h2>Blog</h2>
       {{ range .Blogposts }}
       <div>
         <h2>{{ .Title }}</h2>
@@ -154,10 +153,48 @@
       {{ end }}
     </section>
     <section id="g">
-      <h1>Contact</h1>
+      <h2>Contact</h2>
+
+      <ul>
+        <li>email me at <a href="mailto:vilhelm@bergsoe.net">vilhelm@bergsoe.net</a></li>
+        <li>check out my <a href="https://github.com/vilhelmbergsoe/">Github</a></li>
+      </ul>
     </section>
     <section id="h">
-      <h1>Homepage</h1>
+      <h2>Info</h2>
+      <p>Hi there, I am a aspiring junior developer, from Copenhagen, Denmark, who has a passion for computers and enjoys learning about new things and technologies.</p>
+      <br>
+      <h3>Projects</h3>
+      <br>
+      <ul>
+        <li><a href="https://github.com/vilhelmbergsoe/snake">snake</a> - A CLI Snake Clone</li>
+        <li><a href="https://github.com/vilhelmbergsoe/mazegen">mazegen</a> - A simple maze generator using the recursive backtracking algorithm</li>
+        <li><a href="https://github.com/vilhelmbergsoe/sb">sb</a> - A personal website template with blog functionality</li>
+      </ul>
+
+      <h3>Skills</h3>
+      <br>
+      <ul>
+        <li>Programming in Go, Rust, C and Javascript</li>
+        <li>Linux system administration🐧</li>
+        <li>Web development technologies: Docker, Git, HTML, CSS, Javascript and SQL</li>
+        <li>Experience contributing to opensource projects</li>
+        <li>Search engine ninja🥷</li>
+        <li>Fast learner</li>
+      </ul>
+
+      <h3>Experience</h3>
+      <br>
+      <ul>
+        <li>3 month internship at <a href="https://testaviva.dk">TestaViva</a></li>
+      </ul>
+
+      <h3>Education</h3>
+      <br>
+      <ul>
+        <li>Niels Brock Innovationsgymnasiet @ 2021-2024</li>
+      </ul>
+
     </section>
   </main>
 </body>
