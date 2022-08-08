@@ -101,10 +101,10 @@
   }
 
   div {
-    padding: 10px;
-    border-color: #868686;
-    border-style: solid;
-    border-radius: 5px;
+    /* padding: 10px; */
+    /* border-color: #868686; */
+    /* border-style: solid; */
+    /* border-radius: 5px; */
     margin-bottom: 20px;
   }
 
@@ -141,12 +141,11 @@
         <button type="button" onclick="createBlogpost();">create</button>
       </div>
 
-      <hr>
-
       {{ range .Blogposts }}
       <div>
-        <input id="blogpostTitle{{.ID}}" style="max-width: 100%; width: 99%;" type="text" value="{{.Title}}"/>
         <hr>
+        <input id="blogpostTitle{{.ID}}" style="max-width: 100%; width: 99%;" type="text" value="{{.Title}}"/>
+        <br>
         <textarea id="blogpostContent{{.ID}}" style="max-width:100%; width: 99%; height: 20em;">{{.Content}}</textarea>
         <br>
         <button type="button" onclick="deleteBlogpost({{.ID}});">delete</button>
@@ -157,12 +156,13 @@
   </main>
 
   <script type="text/javascript">
-    const deleteBlogpost = (id) => {
-        fetch('/blogposts/delete/' + id, {
+    const deleteBlogpost = async (id) => {
+        await fetch('/blogposts/delete/' + id, {
             method: 'POST'
-        }).then(location.reload())
+        })
+        location.reload()
     }
-    const updateBlogpost = (id) => {
+    const updateBlogpost = async (id) => {
         blogpostTitle = document.getElementById("blogpostTitle" + id)
         blogpostContent = document.getElementById("blogpostContent" + id)
 
@@ -171,15 +171,17 @@
             content: blogpostContent.value,
         }
         
-        fetch('/blogposts/update/' + id, {
+        await fetch('/blogposts/update/' + id, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        }).then(location.reload())
+        })
+        location.reload()
     }
-    const createBlogpost = () => {
+
+    const createBlogpost = async () => {
         blogpostTitle = document.getElementById("blogpostTitle")
         blogpostContent = document.getElementById("blogpostContent")
 
@@ -188,13 +190,14 @@
             content: blogpostContent.value,
         }
         
-        fetch('/blogposts', {
+        await fetch('/blogposts', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        }).then(location.reload())
+        })
+        location.reload()
     }
   </script>
 </body>

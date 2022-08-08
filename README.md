@@ -19,6 +19,8 @@ server running on :8080
 
 `/admin` admin panel
 
+`/static` static file serve directory
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit)

@@ -9,15 +9,18 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
-	bf "github.com/russross/blackfriday/v2"
+	"github.com/Depado/bfchroma/v2"
 	"github.com/microcosm-cc/bluemonday"
+	bf "github.com/russross/blackfriday/v2"
 )
 
 func (s *server) routes() {
+    s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	s.router.HandleFunc("/", s.HandleHome()).Methods("GET")
 	s.router.HandleFunc("/admin", s.Auth(s.HandleAdmin())).Methods("GET")
 	s.router.HandleFunc("/blogposts", s.HandleBlogposts()).Methods("GET")
@@ -102,8 +105,11 @@ func (s *server) HandleHome() http.HandlerFunc {
 
 		for i := range data.Blogposts {
 			markdown := []byte(data.Blogposts[i].Content)
-			unsafe := string(bf.Run(markdown, bf.WithExtensions(bf.CommonExtensions)))
-			html := bluemonday.UGCPolicy().Sanitize(unsafe)
+			unsafe := string(bf.Run(markdown, bf.WithRenderer(bfchroma.NewRenderer()), bf.WithExtensions(bf.CommonExtensions)))
+			p := bluemonday.UGCPolicy()
+			p.AllowAttrs("style").OnElements("code")
+			p.AllowStyles("color").Matching(regexp.MustCompile("(?i)^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$")).Globally()
+			html := p.Sanitize(unsafe)
 			data.Blogposts[i].Content = template.HTML(html)
 		}
 

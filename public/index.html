@@ -96,10 +96,10 @@
   }
 
   div {
-    padding: 10px;
-    border-color: #868686;
-    border-style: solid;
-    border-radius: 5px;
+    /* padding: 10px; */
+    /* border-color: #868686; */
+    /* border-style: solid; */
+    /* border-radius: 5px; */
     margin-bottom: 20px;
   }
 
@@ -116,12 +116,13 @@
       margin-bottom: 1em;
   }
 
-  pre code {
+  pre {
     color: #fefefe;
     background-color: #3b3b3b;
     display: block;
     padding: 0.5em;
     border-radius: 4px;
+    overflow: auto;
   }
 
   code {
@@ -146,8 +147,8 @@
       <h2>Blog</h2>
       {{ range .Blogposts }}
       <div>
-        <h2>{{ .Title }}</h2>
         <hr>
+        <h2>{{ .Title }}</h2>
         <p>{{ .Content }}</p>
       </div>
       {{ end }}
