@@ -1,0 +1,127 @@
+* {
+margin: 0;
+    --tc: #181818;
+    --bc: #fefefe;
+    --hc: #207030;
+}
+
+@media (prefers-color-scheme: dark) {
+    * {
+        --tc: #fefefe;
+        --bc: #181818;
+        --hc: #ffdd33;
+    }
+}
+
+body {
+    font: 18px -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.4;
+    color: var(--tc);
+    background: var(--bc);
+    max-width: 36em;
+    margin: 0 auto;
+    padding: 0 0.7em;
+    text-align: justify;
+}
+
+main {
+    margin-bottom: 3em;
+}
+
+a {
+    text-decoration: none;
+    color: var(--hc);
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+h1,
+h2,
+br,
+header,
+ul {
+    margin-bottom: 1em;
+}
+
+ul {
+    padding-left: 1em;
+}
+
+br {
+content: " ";
+    display: block;
+}
+
+/* navigation */
+section,
+section:target~section:last-of-type {
+    display: none;
+}
+
+section:target,
+section:last-of-type {
+    display: inherit;
+}
+
+/* end navigation */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header>a {
+    font-size: 1.7em;
+    font-weight: 700;
+}
+
+nav a {
+    margin-left: 0.75em;
+}
+
+div {
+    margin-bottom: 20px;
+}
+
+img {
+    width: 500px;
+}
+
+#b img {
+    width: 100%;
+}
+
+hr {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+}
+
+pre {
+    color: #fefefe;
+    background-color: #3b3b3b;
+    display: block;
+    padding: 0.5em;
+    border-radius: 4px;
+    overflow: auto;
+}
+
+code {
+    color: #fefefe;
+    background-color: #3b3b3b;
+    padding: 3px;
+    border-radius: 3px;
+}
+
+input, textarea, button {
+   font-family: inherit;
+   font-size: inherit;
+}
+
+.go-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    vertical-align: middle;
+}

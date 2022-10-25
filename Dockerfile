@@ -2,7 +2,7 @@ FROM golang:1.18-alpine
 
 WORKDIR /usr/src/app
 
-RUN apk add gcc musl-dev
+RUN apk add sqlite
 
 COPY go.mod go.sum ./
 

@@ -5,7 +5,7 @@ import (
 	"html/template"
 
 	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 )
 
 type server struct {
@@ -30,7 +30,7 @@ type User struct {
 func newServer() (*server, error) {
 	r := mux.NewRouter()
 
-	db, err := sql.Open("sqlite3", "database.db")
+	db, err := sql.Open("sqlite", "database.db")
 	if err != nil {
 		return nil, err
 	}

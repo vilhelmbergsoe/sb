@@ -9,130 +9,9 @@
 
   <meta content="Vilhelm Bergsøe" name="description" />
   <meta content="Vilhelm Bergsøe" property="og:description" />
+
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-<style>
-  * {
-    margin: 0;
-    --tc: #181818;
-    --bc: #fefefe;
-    --hc: #207030;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    * {
-      --tc: #fefefe;
-      --bc: #181818;
-      --hc: #ffdd33;
-    }
-  }
-
-  body {
-    font: 18px -apple-system, BlinkMacSystemFont, sans-serif;
-    line-height: 1.4;
-    color: var(--tc);
-    background: var(--bc);
-    max-width: 36em;
-    margin: 0 auto;
-    padding: 0 0.7em;
-    text-align: justify;
-  }
-
-  main {
-    margin-bottom: 3em;
-  }
-
-  a {
-    text-decoration: none;
-    color: var(--hc);
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
-  h1,
-  h2,
-  br,
-  header,
-  ul {
-    margin-bottom: 1em;
-  }
-
-  ul {
-    padding-left: 1em;
-  }
-
-  br {
-    content: " ";
-    display: block;
-  }
-
-  /* navigation */
-  section,
-  section:target~section:last-of-type {
-    display: none;
-  }
-
-  section:target,
-  section:last-of-type {
-    display: inherit;
-  }
-
-  /* end navigation */
-
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  header>a {
-    font-size: 1.7em;
-    font-weight: 700;
-  }
-
-  nav a {
-    margin-left: 0.75em;
-  }
-
-  div {
-    /* padding: 10px; */
-    /* border-color: #868686; */
-    /* border-style: solid; */
-    /* border-radius: 5px; */
-    margin-bottom: 20px;
-  }
-
-  img {
-    width: 500px;
-  }
-
-  #b img {
-    width: 100%;
-  }
-
-  hr {
-      margin-top: 0.5em;
-      margin-bottom: 1em;
-  }
-
-  pre {
-    color: #fefefe;
-    background-color: #3b3b3b;
-    display: block;
-    padding: 0.5em;
-    border-radius: 4px;
-    overflow: auto;
-  }
-
-  code {
-    color: #fefefe;
-    background-color: #3b3b3b;
-    padding: 3px;
-    border-radius: 3px;
-  }
-
-</style>
 
 <body>
   <header>
@@ -158,16 +37,26 @@
 
       <ul>
         <li>email me at <a href="mailto:vilhelm@bergsoe.net">vilhelm@bergsoe.net</a></li>
-        <li>check out my <a href="https://github.com/vilhelmbergsoe/">Github</a></li>
+        <li>my <a href="/static/gpg.txt">GPG key</a></li>
       </ul>
     </section>
     <section id="h">
       <h2>Info</h2>
       <p>Hi there, I am an aspiring junior developer, from Copenhagen, Denmark, who has a passion for computers and enjoys learning about new things and technologies.</p>
       <br>
+      <ul>
+          <li>
+            <a href="/static/cv.pdf">CV</a>
+          </li>
+          <li>
+            <a href="https://github.com/vilhelmbergsoe">GitHub</a>
+          </li>
+      </ul>
+
       <h3>Projects</h3>
       <br>
       <ul>
+        <li><a href="https://github.com/vilhelmbergsoe/asciicam">asciicam</a> - An ascii webcam in your console</li>
         <li><a href="https://github.com/vilhelmbergsoe/snake">snake</a> - A CLI Snake Clone</li>
         <li><a href="https://github.com/vilhelmbergsoe/mazegen">mazegen</a> - A simple maze generator using the recursive backtracking algorithm</li>
         <li><a href="https://github.com/vilhelmbergsoe/sb">sb</a> - A personal website template with blog functionality</li>
@@ -176,10 +65,10 @@
       <h3>Skills</h3>
       <br>
       <ul>
-        <li>Programming in Go, Rust, C and Javascript</li>
+        <li>Programming in Go<img src="/static/go.svg" class="go-icon" />, Rust 🦀, C, Zig and Javascript</li>
         <li>Linux system administration🐧</li>
-        <li>Web development technologies: Docker, Git, HTML, CSS, Javascript and SQL</li>
-        <li>Experience contributing to opensource projects</li>
+        <li>Web development technologies: Docker, Git, HTML, CSS, SQL and ReactJS</li>
+        <li>Some experience contributing to open source projects</li>
         <li>Search engine ninja🥷</li>
         <li>Fast learner</li>
       </ul>
@@ -195,7 +84,6 @@
       <ul>
         <li>Niels Brock Innovationsgymnasiet @ 2021-2024</li>
       </ul>
-
     </section>
   </main>
 </body>
