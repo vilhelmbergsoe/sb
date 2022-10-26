@@ -4,21 +4,23 @@ import (
 	"database/sql"
 	"html/template"
 
-	"github.com/gorilla/mux"
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/gorilla/mux"
 )
 
 type server struct {
-	router    *mux.Router
-	db        *sql.DB
-	hometmpl  *template.Template
-	admintmpl *template.Template
+	router       *mux.Router
+	db           *sql.DB
+	hometmpl     *template.Template
+	admintmpl    *template.Template
+	blogposttmpl *template.Template
 }
 
 type Blogpost struct {
 	ID      int    `json:"id"` // gorm:"primary_key"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+	Date    string `json:"date"`
 }
 
 type User struct {
@@ -36,7 +38,7 @@ func newServer() (*server, error) {
 	}
 
 	createUserTable := `CREATE TABLE IF NOT EXISTS users(id integer primary key, u TEXT NOT NULL, p TEXT NOT NULL);`
-	createBlogpostsTable := `CREATE TABLE IF NOT EXISTS blogposts(id integer primary key, title TEXT NOT NULL, content TEXT NOT NULL);`
+	createBlogpostsTable := `CREATE TABLE IF NOT EXISTS blogposts(id integer primary key, title TEXT NOT NULL, content TEXT NOT NULL, date TEXT NOT NULL);`
 	stmnt, err := db.Prepare(createUserTable)
 	if err != nil {
 		return nil, err
@@ -64,7 +66,12 @@ func newServer() (*server, error) {
 		return nil, err
 	}
 
-	s := &server{router: r, db: db, hometmpl: hometmpl, admintmpl: admintmpl}
+	blogposttmpl, err := template.ParseFiles("public/blogpost.html")
+	if err != nil {
+		return nil, err
+	}
+
+	s := &server{router: r, db: db, hometmpl: hometmpl, admintmpl: admintmpl, blogposttmpl: blogposttmpl}
 	s.routes()
 	return s, nil
 }

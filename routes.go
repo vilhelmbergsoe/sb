@@ -13,17 +13,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/Depado/bfchroma/v2"
+	"github.com/gorilla/mux"
 	"github.com/microcosm-cc/bluemonday"
 	bf "github.com/russross/blackfriday/v2"
 )
 
 func (s *server) routes() {
-    s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	s.router.HandleFunc("/", s.HandleHome()).Methods("GET")
 	s.router.HandleFunc("/admin", s.Auth(s.HandleAdmin())).Methods("GET")
 	s.router.HandleFunc("/blogposts", s.HandleBlogposts()).Methods("GET")
+	s.router.HandleFunc("/blogpost/{id}", s.HandleBlogpost()).Methods("GET")
 	s.router.HandleFunc("/blogposts", s.Auth(s.HandleCreateBlogpost())).Methods("POST")
 	s.router.HandleFunc("/blogposts/delete/{id}", s.Auth(s.HandleDeleteBlogpost())).Methods("POST")
 	s.router.HandleFunc("/blogposts/update/{id}", s.Auth(s.HandleUpdateBlogpost())).Methods("POST")
@@ -76,9 +77,9 @@ func (s *server) Auth(h http.HandlerFunc) http.HandlerFunc {
 
 func (s *server) HandleHome() http.HandlerFunc {
 	type Blogpost struct {
-		ID      int
-		Title   string
-		Content template.HTML
+		ID    int
+		Title string
+		Date  string
 	}
 
 	type Data struct {
@@ -102,16 +103,6 @@ func (s *server) HandleHome() http.HandlerFunc {
 		var data Data
 
 		json.Unmarshal(body, &data.Blogposts)
-
-		for i := range data.Blogposts {
-			markdown := []byte(data.Blogposts[i].Content)
-			unsafe := string(bf.Run(markdown, bf.WithRenderer(bfchroma.NewRenderer()), bf.WithExtensions(bf.CommonExtensions)))
-			p := bluemonday.UGCPolicy()
-			p.AllowAttrs("style").OnElements("code")
-			p.AllowStyles("color").Matching(regexp.MustCompile("(?i)^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$")).Globally()
-			html := p.Sanitize(unsafe)
-			data.Blogposts[i].Content = template.HTML(html)
-		}
 
 		s.hometmpl.Execute(w, data)
 	}
@@ -145,6 +136,48 @@ func (s *server) HandleAdmin() http.HandlerFunc {
 	}
 }
 
+func (s *server) HandleBlogpost() http.HandlerFunc {
+
+	type Blogpost struct {
+		ID      int
+		Title   string
+		Content template.HTML
+		Date    string
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var blogpost Blogpost
+
+		row := s.db.QueryRow(fmt.Sprintf("SELECT * FROM blogposts WHERE id = %d LIMIT 1", id))
+		if err = row.Scan(&blogpost.ID, &blogpost.Title, &blogpost.Content, &blogpost.Date); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err = row.Err(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		markdown := []byte(blogpost.Content)
+		unsafe := string(bf.Run(markdown, bf.WithRenderer(bfchroma.NewRenderer()), bf.WithExtensions(bf.CommonExtensions)))
+		p := bluemonday.UGCPolicy()
+		p.AllowAttrs("style").OnElements("code")
+		p.AllowStyles("color").Matching(regexp.MustCompile("(?i)^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$")).Globally()
+		html := p.Sanitize(unsafe)
+		blogpost.Content = template.HTML(html)
+
+		s.blogposttmpl.Execute(w, blogpost)
+	}
+}
+
 func (s *server) HandleBlogposts() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var blogposts []Blogpost
@@ -157,7 +190,7 @@ func (s *server) HandleBlogposts() http.HandlerFunc {
 		defer row.Close()
 		for row.Next() {
 			var blogpost Blogpost
-			if err = row.Scan(&blogpost.ID, &blogpost.Title, &blogpost.Content); err != nil {
+			if err = row.Scan(&blogpost.ID, &blogpost.Title, &blogpost.Content, &blogpost.Date); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -246,7 +279,7 @@ func (s *server) HandleCreateBlogpost() http.HandlerFunc {
 			return
 		}
 
-		insertBlogpost := `INSERT INTO blogposts VALUES (NULL, ?, ?)`
+		insertBlogpost := `INSERT INTO blogposts VALUES (NULL, ?, ?, ?)`
 
 		stmnt, err := s.db.Prepare(insertBlogpost)
 		if err != nil {
@@ -254,7 +287,7 @@ func (s *server) HandleCreateBlogpost() http.HandlerFunc {
 			return
 		}
 
-		_, err = stmnt.Exec(blogpost.Title, blogpost.Content)
+		_, err = stmnt.Exec(blogpost.Title, blogpost.Content, blogpost.Date)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

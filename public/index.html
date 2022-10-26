@@ -24,17 +24,17 @@
   <main>
     <section id="b">
       <h2>Blog</h2>
+      <ul>
       {{ range .Blogposts }}
-      <div>
-        <hr>
-        <h2>{{ .Title }}</h2>
-        <p>{{ .Content }}</p>
-      </div>
+      <li>
+        {{ .Date }} -
+        <a href="/blogpost/{{ .ID }}"><b>{{ .Title }}</b></a>
+      </li>
       {{ end }}
+      </ul>
     </section>
     <section id="g">
       <h2>Contact</h2>
-
       <ul>
         <li>email me at <a href="mailto:vilhelm@bergsoe.net">vilhelm@bergsoe.net</a></li>
         <li>my <a href="/static/gpg.txt">GPG key</a></li>
@@ -58,7 +58,7 @@
       <ul>
         <li><a href="https://github.com/vilhelmbergsoe/asciicam">asciicam</a> - An ascii webcam in your console</li>
         <li><a href="https://github.com/vilhelmbergsoe/snake">snake</a> - A CLI Snake Clone</li>
-        <li><a href="https://github.com/vilhelmbergsoe/mazegen">mazegen</a> - A simple maze generator using the recursive backtracking algorithm</li>
+        <li><a href="https://github.com/vilhelmbergsoe/mazegen">mazegen</a> - A simple maze generator that uses recursive backtracking</li>
         <li><a href="https://github.com/vilhelmbergsoe/sb">sb</a> - A personal website template with blog functionality</li>
       </ul>
 

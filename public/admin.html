@@ -78,10 +78,15 @@
     const createBlogpost = async () => {
         blogpostTitle = document.getElementById("blogpostTitle")
         blogpostContent = document.getElementById("blogpostContent")
+        today = new Date()
+        var dd = today.getDate();
+        var mm = today.getMonth() + 1;
+        var yyyy = today.getFullYear();
 
         let data = {
             title: blogpostTitle.value,
             content: blogpostContent.value,
+            date: dd + "/" + mm + "/" + yyyy
         }
         
         await fetch('/blogposts', {

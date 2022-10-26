@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta content="width=device-width,initial-scale=1" name="viewport" />
+
+  <title>sb - {{ .Title }}</title>
+  <meta content="sb - admin panel" property="og:title" />
+
+  <meta content="sb - admin panel" name="description" />
+  <meta content="sb - admin panel" property="og:description" />
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <header>
+    <a href="/#h">Vilhelm Bergsøe</a>
+    <nav>
+      <a href="/#b">Blog</a>
+      <a href="/#g">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <section id="h">
+        <h2>{{ .Title }}</h2>
+        <br>
+        <p>
+          {{ .Content }}
+        </p>
+    </section>
+  </main>
+</body>
+
+</html>
