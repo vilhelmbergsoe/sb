@@ -1,296 +1,47 @@
 package main
 
 import (
-	"bufio"
-	"crypto/sha256"
-	"encoding/json"
-	"fmt"
-	"html/template"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
+	"sort"
 
-	"github.com/Depado/bfchroma/v2"
 	"github.com/gorilla/mux"
-	"github.com/microcosm-cc/bluemonday"
-	bf "github.com/russross/blackfriday/v2"
 )
 
 func (s *server) routes() {
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	s.router.HandleFunc("/", s.HandleHome()).Methods("GET")
-	s.router.HandleFunc("/admin", s.Auth(s.HandleAdmin())).Methods("GET")
-	s.router.HandleFunc("/blogposts", s.HandleBlogposts()).Methods("GET")
-	s.router.HandleFunc("/blogpost/{id}", s.HandleBlogpost()).Methods("GET")
-	s.router.HandleFunc("/blogposts", s.Auth(s.HandleCreateBlogpost())).Methods("POST")
-	s.router.HandleFunc("/blogposts/delete/{id}", s.Auth(s.HandleDeleteBlogpost())).Methods("POST")
-	s.router.HandleFunc("/blogposts/update/{id}", s.Auth(s.HandleUpdateBlogpost())).Methods("POST")
-}
-
-func (s *server) Auth(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		username, password, ok := r.BasicAuth()
-
-		if ok {
-			usernameSha256Hash := sha256.New()
-			passwordSha256Hash := sha256.New()
-			io.Copy(usernameSha256Hash, strings.NewReader(username))
-			io.Copy(passwordSha256Hash, strings.NewReader(password))
-
-			userHash := fmt.Sprintf("%x", usernameSha256Hash.Sum(nil))
-			passHash := fmt.Sprintf("%x", passwordSha256Hash.Sum(nil))
-
-			row, err := s.db.Query("SELECT * FROM users;")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			defer row.Close()
-
-			users := make([]User, 0)
-			for row.Next() {
-				var user User
-				row.Scan(&user.ID, &user.Username, &user.Password)
-				users = append(users, user)
-			}
-
-			if err = row.Err(); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			for _, user := range users {
-				if user.Username == userHash && user.Password == passHash {
-					h(w, r)
-					return
-				}
-			}
-		}
-
-		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	}
+	s.router.HandleFunc("/blog/{url}", s.HandleBlogpost()).Methods("GET")
 }
 
 func (s *server) HandleHome() http.HandlerFunc {
-	type Blogpost struct {
-		ID    int
-		Title string
-		Date  string
-	}
-
-	type Data struct {
-		Blogposts []Blogpost
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := http.Get("http://localhost:8080/blogposts")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		defer resp.Body.Close()
 
-		buf := bufio.NewReader(resp.Body)
+		sort.Slice(s.blogposts, func(i, j int) bool {
+			return s.blogposts[i].Date.After(s.blogposts[j].Date)
+		})
 
-		body, err := ioutil.ReadAll(buf)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-
-		var data Data
-
-		json.Unmarshal(body, &data.Blogposts)
-
-		s.hometmpl.Execute(w, data)
-	}
-}
-
-func (s *server) HandleAdmin() http.HandlerFunc {
-
-	type Data struct {
-		Blogposts []Blogpost
-	}
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := http.Get("http://localhost:8080/blogposts")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		defer resp.Body.Close()
-
-		buf := bufio.NewReader(resp.Body)
-
-		body, err := ioutil.ReadAll(buf)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-
-		var data Data
-
-		json.Unmarshal(body, &data.Blogposts)
-
-		s.admintmpl.Execute(w, data)
+		s.tmpl.ExecuteTemplate(w, "home.gohtml", s.blogposts)
 	}
 }
 
 func (s *server) HandleBlogpost() http.HandlerFunc {
 
-	type Blogpost struct {
-		ID      int
-		Title   string
-		Content template.HTML
-		Date    string
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		blogpostUrl := vars["url"]
 
 		var blogpost Blogpost
 
-		row := s.db.QueryRow(fmt.Sprintf("SELECT * FROM blogposts WHERE id = %d LIMIT 1", id))
-		if err = row.Scan(&blogpost.ID, &blogpost.Title, &blogpost.Content, &blogpost.Date); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if err = row.Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		markdown := []byte(blogpost.Content)
-		unsafe := string(bf.Run(markdown, bf.WithRenderer(bfchroma.NewRenderer()), bf.WithExtensions(bf.CommonExtensions)))
-		p := bluemonday.UGCPolicy()
-		p.AllowAttrs("style").OnElements("code")
-		p.AllowStyles("color").Matching(regexp.MustCompile("(?i)^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$")).Globally()
-		html := p.Sanitize(unsafe)
-		blogpost.Content = template.HTML(html)
-
-		s.blogposttmpl.Execute(w, blogpost)
-	}
-}
-
-func (s *server) HandleBlogposts() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var blogposts []Blogpost
-
-		row, err := s.db.Query("SELECT * FROM blogposts ORDER BY id DESC")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer row.Close()
-		for row.Next() {
-			var blogpost Blogpost
-			if err = row.Scan(&blogpost.ID, &blogpost.Title, &blogpost.Content, &blogpost.Date); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+		for _, v := range s.blogposts {
+			if blogpostUrl == v.Url {
+				blogpost = v
 			}
-			blogposts = append(blogposts, blogpost)
 		}
-
-		if err = row.Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if blogpost.Title == "" {
+			http.Error(w, "404 Blog post not found", http.StatusNotFound)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(blogposts)
-	}
-}
-
-func (s *server) HandleDeleteBlogpost() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		deleteBlogpost := `DELETE FROM blogposts WHERE id = ?`
-
-		stmnt, err := s.db.Prepare(deleteBlogpost)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		_, err = stmnt.Exec(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func (s *server) HandleUpdateBlogpost() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		var blogpost Blogpost
-
-		err = json.NewDecoder(r.Body).Decode(&blogpost)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		updateBlogpost := `UPDATE blogposts SET title = ?, content = ? WHERE id = ?`
-
-		stmnt, err := s.db.Prepare(updateBlogpost)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		_, err = stmnt.Exec(blogpost.Title, blogpost.Content, id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func (s *server) HandleCreateBlogpost() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var blogpost Blogpost
-
-		err := json.NewDecoder(r.Body).Decode(&blogpost)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		insertBlogpost := `INSERT INTO blogposts VALUES (NULL, ?, ?, ?)`
-
-		stmnt, err := s.db.Prepare(insertBlogpost)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		_, err = stmnt.Exec(blogpost.Title, blogpost.Content, blogpost.Date)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		s.tmpl.ExecuteTemplate(w, "blog.gohtml", blogpost)
 	}
 }

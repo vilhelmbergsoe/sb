@@ -18,7 +18,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer s.db.Close()
 
 	fmt.Println("server running on :8080")
 

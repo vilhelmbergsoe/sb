@@ -1,77 +1,102 @@
 package main
 
 import (
-	"database/sql"
 	"html/template"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 
+	"github.com/adrg/frontmatter"
 	_ "github.com/glebarez/go-sqlite"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/parser"
 	"github.com/gorilla/mux"
 )
 
 type server struct {
-	router       *mux.Router
-	db           *sql.DB
-	hometmpl     *template.Template
-	admintmpl    *template.Template
-	blogposttmpl *template.Template
+	router    *mux.Router
+	blogposts []Blogpost
+	tmpl      *template.Template
 }
 
 type Blogpost struct {
-	ID      int    `json:"id"` // gorm:"primary_key"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Date    string `json:"date"`
+	Url        string
+	Title      string
+	Content    template.HTML
+	Date       time.Time
+	DateString string
+	Archive    bool
 }
 
-type User struct {
-	ID       int    `json:"id"` // gorm:"primary_key"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+func parseBlog(url string, file *os.File) (Blogpost, error) {
+	var matter struct {
+		Title   string
+		Date    string
+		Archive bool
+	}
+
+	content, err := frontmatter.Parse(file, &matter)
+	if err != nil {
+		return Blogpost{}, err
+	}
+
+	extensions := parser.CommonExtensions | parser.FencedCode
+	parser := parser.NewWithExtensions(extensions)
+	html := markdown.ToHTML(content, parser, nil)
+
+	parsedDate, err := time.Parse("02/01/2006", matter.Date)
+	if err != nil {
+		return Blogpost{}, err
+	}
+
+	return Blogpost{
+		Url:        url,
+		Title:      matter.Title,
+		Content:    template.HTML(html),
+		Date:       parsedDate,
+		DateString: matter.Date,
+		Archive:    matter.Archive,
+	}, nil
 }
 
 func newServer() (*server, error) {
 	r := mux.NewRouter()
 
-	db, err := sql.Open("sqlite", "database.db")
+	blogposts := make([]Blogpost, 0)
+
+	files, err := ioutil.ReadDir("blog")
 	if err != nil {
 		return nil, err
 	}
 
-	createUserTable := `CREATE TABLE IF NOT EXISTS users(id integer primary key, u TEXT NOT NULL, p TEXT NOT NULL);`
-	createBlogpostsTable := `CREATE TABLE IF NOT EXISTS blogposts(id integer primary key, title TEXT NOT NULL, content TEXT NOT NULL, date TEXT NOT NULL);`
-	stmnt, err := db.Prepare(createUserTable)
-	if err != nil {
-		return nil, err
-	}
-	stmnt.Exec()
+	for _, info := range files {
+		filename := info.Name()
+		var url string
+		if len(filename) > 3 {
+			url = filename[:len(filename)-3]
+		}
+		file, err := os.Open(filepath.Join("blog", filename))
+		if err != nil {
+			return nil, err
+		}
 
-	stmnt, err = db.Prepare(createBlogpostsTable)
-	if err != nil {
-		return nil, err
-	}
-	stmnt.Exec()
+		blogpost, err := parseBlog(url, file)
+		if err != nil {
+			return nil, err
+		}
 
-	// err = db.AutoMigrate(&Blogpost{}, &User{})
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	hometmpl, err := template.ParseFiles("public/index.html")
-	if err != nil {
-		return nil, err
+		if blogpost.Archive == false {
+			blogposts = append(blogposts, blogpost)
+		}
 	}
 
-	admintmpl, err := template.ParseFiles("public/admin.html")
-	if err != nil {
-		return nil, err
-	}
-
-	blogposttmpl, err := template.ParseFiles("public/blogpost.html")
+	tmpl, err := template.ParseFiles("templates/home.gohtml", "templates/blog.gohtml")
 	if err != nil {
 		return nil, err
 	}
 
-	s := &server{router: r, db: db, hometmpl: hometmpl, admintmpl: admintmpl, blogposttmpl: blogposttmpl}
+	s := &server{router: r, blogposts: blogposts, tmpl: tmpl}
 	s.routes()
 	return s, nil
 }

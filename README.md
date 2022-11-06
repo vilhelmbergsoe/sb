@@ -6,8 +6,6 @@ A simple personal website template with blog functionality.
 
 ```console
 $ git clone https://github.com/vilhelmbergsoe/sb
-$ cd ./sb/tools/
-$ ./createuser admin pass && cd ../
 $ go get
 $ go run .
 server running on :8080
@@ -17,7 +15,7 @@ server running on :8080
 
 `/` home page
 
-`/admin` admin panel
+`/blog/{url}` blog post page
 
 `/static` static file serve directory
 

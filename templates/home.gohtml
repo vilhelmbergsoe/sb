@@ -25,10 +25,10 @@
     <section id="b">
       <h2>Blog</h2>
       <ul>
-      {{ range .Blogposts }}
+      {{ range . }}
       <li>
-        {{ .Date }} -
-        <a href="/blogpost/{{ .ID }}"><b>{{ .Title }}</b></a>
+        {{ .DateString }} -
+        <a href="/blog/{{ .Url }}"><b>{{ .Title }}</b></a>
       </li>
       {{ end }}
       </ul>
