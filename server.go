@@ -1,11 +1,12 @@
 package main
 
 import (
+	"embed"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+	"io/fs"
 
 	"github.com/adrg/frontmatter"
 	_ "github.com/glebarez/go-sqlite"
@@ -13,6 +14,9 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/gorilla/mux"
 )
+
+//go:embed blog templates static
+var content embed.FS
 
 type server struct {
 	router    *mux.Router
@@ -65,7 +69,7 @@ func newServer() (*server, error) {
 
 	blogposts := make([]Blogpost, 0)
 
-	files, err := ioutil.ReadDir("blog")
+	files, err := fs.ReadDir(content, "blog")
 	if err != nil {
 		return nil, err
 	}
@@ -91,12 +95,22 @@ func newServer() (*server, error) {
 		}
 	}
 
-	tmpl, err := template.ParseFiles("templates/home.gohtml", "templates/blog.gohtml")
+	fsys := fs.FS(content)
+	tmplfs, err := fs.Sub(fsys, "templates")
+	if err != nil {
+		return nil, err
+	}
+
+	tmpl, err := template.ParseFS(tmplfs, "home.gohtml", "blog.gohtml")
 	if err != nil {
 		return nil, err
 	}
 
 	s := &server{router: r, blogposts: blogposts, tmpl: tmpl}
-	s.routes()
+
+	if err := s.routes(); err != nil {
+		return nil, err
+	}
+
 	return s, nil
 }

@@ -3,14 +3,22 @@ package main
 import (
 	"net/http"
 	"sort"
+	"io/fs"
 
 	"github.com/gorilla/mux"
 )
 
-func (s *server) routes() {
-	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+func (s *server) routes() error {
+	fsys := fs.FS(content)
+	static, err := fs.Sub(fsys, "static")
+	if err != nil {
+		return err
+	}
+	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.FS(static))))
 	s.router.HandleFunc("/", s.HandleHome()).Methods("GET")
 	s.router.HandleFunc("/blog/{url}", s.HandleBlogpost()).Methods("GET")
+
+	return nil
 }
 
 func (s *server) HandleHome() http.HandlerFunc {
