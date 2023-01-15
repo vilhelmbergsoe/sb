@@ -2,8 +2,6 @@ FROM golang:1.18-alpine
 
 WORKDIR /usr/src/app
 
-RUN apk add sqlite
-
 COPY go.mod go.sum ./
 
 RUN go mod download && go mod verify
