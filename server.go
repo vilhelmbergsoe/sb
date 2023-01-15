@@ -30,14 +30,14 @@ type Blogpost struct {
 	Content    template.HTML
 	Date       time.Time
 	DateString string
-	Archive    bool
+	Archived    bool
 }
 
 func parseBlog(url string, file *os.File) (Blogpost, error) {
 	var matter struct {
 		Title   string
 		Date    string
-		Archive bool
+		Archived bool
 	}
 
 	content, err := frontmatter.Parse(file, &matter)
@@ -60,7 +60,7 @@ func parseBlog(url string, file *os.File) (Blogpost, error) {
 		Content:    template.HTML(html),
 		Date:       parsedDate,
 		DateString: matter.Date,
-		Archive:    matter.Archive,
+		Archived:    matter.Archived,
 	}, nil
 }
 
@@ -90,13 +90,13 @@ func newServer() (*server, error) {
 			return nil, err
 		}
 
-		if blogpost.Archive == false {
+		if blogpost.Archived == false {
 			blogposts = append(blogposts, blogpost)
 		}
 	}
 
-	fsys := fs.FS(content)
-	tmplfs, err := fs.Sub(fsys, "templates")
+	content := fs.FS(content)
+	tmplfs, err := fs.Sub(content, "templates")
 	if err != nil {
 		return nil, err
 	}
