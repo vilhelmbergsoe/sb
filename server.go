@@ -96,12 +96,12 @@ func newServer() (*server, error) {
 	}
 
 	content := fs.FS(content)
-	tmplfs, err := fs.Sub(content, "templates")
+	templates, err := fs.Sub(content, "templates")
 	if err != nil {
 		return nil, err
 	}
 
-	tmpl, err := template.ParseFS(tmplfs, "home.gohtml", "blog.gohtml")
+	tmpl, err := template.ParseFS(templates, "home.gohtml", "blog.gohtml")
 	if err != nil {
 		return nil, err
 	}
